@@ -388,8 +388,7 @@ class AlignToEdge:
 
     def IsActive(self):
         if FreeCADGui.ActiveDocument:
-            if not(FreeCAD.ActiveDocument.ExplodedAssembly.InAnimation):
-                return True
+            return True
 
         else:
             return False
@@ -419,8 +418,7 @@ class Rotate15:
 
     def IsActive(self):
         if FreeCADGui.ActiveDocument:
-            if not(FreeCAD.ActiveDocument.ExplodedAssembly.InAnimation):
-                return True
+            return True
 
         else:
             return False
@@ -442,8 +440,7 @@ class PointToPoint:
 
     def IsActive(self):
         if FreeCADGui.ActiveDocument:
-            if not(FreeCAD.ActiveDocument.ExplodedAssembly.InAnimation):
-                return True
+            return True
 
         else:
             return False
@@ -467,8 +464,7 @@ class PlaceConcentric:
 
     def IsActive(self):
         if FreeCADGui.ActiveDocument:
-            if not(FreeCAD.ActiveDocument.ExplodedAssembly.InAnimation):
-                return True
+            return True
 
         else:
             return False

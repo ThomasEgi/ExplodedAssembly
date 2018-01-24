@@ -357,6 +357,36 @@ class GoToSelectedTrajectory:
             FreeCAD.Console.PrintError('Error: Select one exploded animation trajectory')
 
 
+
+class CycleAnimation:
+    def __init__(self):
+        self.running = False
+    def GetResources(self):
+        return {'Pixmap': __dir__ + '/icons/CycleAnim.svg',
+                'MenuText': 'CycleAnimation',
+                'ToolTip': 'Repeats animation cyclically, start and stop by clicking this button'}
+
+    def IsActive(self):
+        if FreeCADGui.ActiveDocument.ExplodedAssembly:
+            return True
+
+        else:
+            return False
+
+    def Activated(self):
+        try:
+            self.running = not( self.running )
+            while self.running:
+                ea.resetPlacement()
+                ea.runAnimation()
+
+
+        except:
+            FreeCAD.Console.PrintError('Error: Select one exploded animation trajectory')
+
+
+
+
 class ToggleTrajectoryVisibility:
     def __init__(self):
         self.visibility = True
@@ -515,6 +545,7 @@ if FreeCAD.GuiUp:
     FreeCAD.Gui.addCommand('PlayBackward', PlayBackward())
     FreeCAD.Gui.addCommand('StopAnimation', StopAnimation())
     FreeCAD.Gui.addCommand('PlayForward', PlayForward())
+    FreeCAD.Gui.addCommand('CycleAnimation', CycleAnimation() )
     FreeCAD.Gui.addCommand('GoToEnd', GoToEnd())
     FreeCAD.Gui.addCommand('GoToSelectedTrajectory',GoToSelectedTrajectory())
     FreeCAD.Gui.addCommand('ToggleTrajectoryVisibility', ToggleTrajectoryVisibility())

@@ -43,7 +43,7 @@ class ExplodedAssembly(Workbench):
         import EAInit
         self.CreationTools = ['CreateBoltGroup',
                               'CreateSimpleGroup',
-                              'CreateShapeChanger',
+                              'createShapeChanger',
                               'ModifyIndividualObjectTrajectory',
                               'PlaceBeforeSelectedTrajectory',
                               'ToggleTrajectoryVisibility']
@@ -56,6 +56,7 @@ class ExplodedAssembly(Workbench):
                                       'PlayBackward',
                                       'StopAnimation',
                                       'PlayForward',
+                                      'CycleAnimation',
                                       'GoToEnd',
                                       'GoToSelectedTrajectory']
 
@@ -74,6 +75,7 @@ class ExplodedAssembly(Workbench):
                               'PlayBackward',
                               'StopAnimation',
                               'PlayForward',
+                              'CycleAnimation',
                               'GoToEnd',
                               'ToggleTrajectoryVisibility',
                               'AlignToEdge',

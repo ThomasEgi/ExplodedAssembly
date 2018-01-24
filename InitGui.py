@@ -33,7 +33,7 @@ class ExplodedAssembly(Workbench):
     import EAInit# this is needed to load the workbench icon
     # __dir__ = os.path.dirname( __file__ ) # __file__ is not working
     Icon = EAInit.__dir__ + '/icons/WorkbenchIcon.svg'
-    MenuText = 'Exploded Assembly'
+    MenuText = 'Exploded Assembly TESTING'
     ToolTip = 'Assemble parts and create exploded drawings and animations'
 
     def GetClassName(self):
@@ -43,6 +43,7 @@ class ExplodedAssembly(Workbench):
         import EAInit
         self.CreationTools = ['CreateBoltGroup',
                               'CreateSimpleGroup',
+                              'CreateShapeChanger',
                               'ModifyIndividualObjectTrajectory',
                               'PlaceBeforeSelectedTrajectory',
                               'ToggleTrajectoryVisibility']
@@ -65,6 +66,7 @@ class ExplodedAssembly(Workbench):
 
         self.Menu_tools = ['CreateBoltGroup',
                               'CreateSimpleGroup',
+                              'createShapeChanger',
                               'ModifyIndividualObjectTrajectory',
                               'PlaceBeforeSelectedTrajectory',
                               'GoToSelectedTrajectory',
@@ -84,7 +86,7 @@ class ExplodedAssembly(Workbench):
         #self.appendToolbar('ExplodedAssemblyCameraTools', self.CameraAnimation)
         self.appendToolbar('ExplodedAssemblyAnimationControlTools', self.AnimationControlTools)
         self.appendToolbar('ExplodedAssemblyAuxiliarAssemblyTools', self.AuxiliaryAssemblyTools)
-        self.appendMenu('ExplodedAssembly', self.Menu_tools)
+        self.appendMenu('ExplodedAssembly TESTING', self.Menu_tools)
 
     def Activated(self):
         import ExplodedAssembly as ea

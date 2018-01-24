@@ -88,6 +88,24 @@ class CreateWireGroup:
         pass
 
 
+class CreateShapeChanger:
+    def GetResources(self):
+        return {'Pixmap': __dir__ + '/icons/WireTrajectory.svg',
+                'MenuText': 'Create Shape Changer',
+                'ToolTip': 'Select two shapes and they will switch when the animation arrives to it\nIf only one is chosen, you can change transparency'}
+
+    def IsActive(self):
+        if FreeCADGui.ActiveDocument:
+            if not(FreeCAD.ActiveDocument.ExplodedAssembly.InAnimation):
+                return True
+
+        else:
+            return False
+
+    def Activated(self):
+        ea.checkDocumentStructure()
+        ea.createShapeChanger()
+
 
 class PlaceBeforeSelectedTrajectory:
     # execute this function with caution
@@ -105,7 +123,7 @@ class PlaceBeforeSelectedTrajectory:
             return False
 
     def Activated(self):
-        # check selection before running (rearrange objects is dangerous, use with caution)
+        # check selection before running (rearranging objects is dangerous, use with caution)
         try:
             sel = FreeCAD.Gui.Selection.getSelectionEx()
             a = sel[0].Object.Distance
@@ -491,6 +509,7 @@ if FreeCAD.GuiUp:
     FreeCAD.Gui.addCommand('CreateBoltGroup', CreateBoltGroup())
     FreeCAD.Gui.addCommand('CreateSimpleGroup', CreateSimpleGroup())
     FreeCAD.Gui.addCommand('CreateWireGroup', CreateWireGroup())
+    FreeCAD.Gui.addCommand('createShapeChanger', CreateShapeChanger())
     FreeCAD.Gui.addCommand('ModifyIndividualObjectTrajectory', ModifyIndividualObjectTrajectory())
     FreeCAD.Gui.addCommand('CreateManualCamera', CreateManualCamera())
     FreeCAD.Gui.addCommand('CreateEdgeCamera', CreateEdgeCamera())

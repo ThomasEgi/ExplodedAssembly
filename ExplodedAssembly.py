@@ -38,6 +38,8 @@ class ExplodedAssemblyFolder:
         obj.addProperty('App::PropertyBool', 'ResetAnimation').ResetAnimation = False
         obj.addProperty('App::PropertyBool', 'InAnimation').InAnimation = False
         obj.addProperty('App::PropertyBool', 'RemoveAllTrajectories').RemoveAllTrajectories = False
+        obj.addProperty('App::PropertyString', 'TrajType' ).TrajType = 'EAF'
+        obj.setEditorMode('TrajType', 1 )
         obj.Proxy = self
 
     def execute(self, fp):
@@ -86,6 +88,8 @@ class BoltGroupObject:
         obj.addProperty('App::PropertyFloat', 'Revolutions').Revolutions = 0.0
         obj.addProperty('App::PropertyFloat', 'AnimationStepTime').AnimationStepTime = 0.0
         obj.addProperty('App::PropertyInteger', 'AnimationSteps').AnimationSteps = 20
+        obj.addProperty('App::PropertyString', 'TrajType' ).TrajType = 'BG'
+        obj.setEditorMode('TrajType', 1 )
         obj.Proxy = self
 
     def onChanged(self, fp, prop):
@@ -182,6 +186,8 @@ class SimpleGroupObject:
         obj.addProperty('App::PropertyFloat', 'Revolutions').Revolutions = 0.0
         obj.addProperty('App::PropertyFloat', 'AnimationStepTime').AnimationStepTime = 0.0
         obj.addProperty('App::PropertyInteger', 'AnimationSteps').AnimationSteps = 20
+        obj.addProperty('App::PropertyString', 'TrajType' ).TrajType = 'SG'
+        obj.setEditorMode('TrajType', 1 )
         obj.Proxy = self
 
     def onChanged(self, fp, prop):
@@ -256,6 +262,8 @@ class WireGroupObject:
         obj.addProperty('App::PropertyPythonObject', 'names').names = []
         obj.addProperty('App::PropertyFloat', 'AnimationStepTime').AnimationStepTime = 0.0
         obj.addProperty('App::PropertyInteger', 'AnimationStepsEdge').AnimationStepsEdge = 10
+        obj.addProperty('App::PropertyString', 'TrajType' ).TrajType = 'WG'
+        obj.setEditorMode('TrajType', 1 )
         obj.Proxy = self
 
     def onChanged(self, fp, prop):
@@ -298,30 +306,85 @@ def createWireDisassemble():
     FreeCAD.ActiveDocument.recompute()
 
 
+class ShapeChanger:
+    def __init__(self, obj):
+        obj.addProperty('App::PropertyPythonObject', 'names').names = []
+        obj.addProperty('App::PropertyPythonObject', 'initialVisibility').initialVisibility = []
+        obj.addProperty('App::PropertyFloat', 'AnimationStepTime').AnimationStepTime = 0.0
+        obj.addProperty('App::PropertyInteger', 'WaitAnimationSteps').WaitAnimationSteps = 10
+        obj.addProperty('App::PropertyInteger', 'ChangeAtThisStep').ChangeAtThisStep = 5
+        obj.addProperty('App::PropertyString', 'TrajType' ).TrajType = 'SC'
+        obj.setEditorMode('TrajType', 1 )
+        obj.Proxy = self
 
+    def onChanged(self, fp, prop):
+        pass
+
+    def execute(self, fp ):
+        resetPlacement()
+        goToEnd()
+        FreeCAD.ActiveDocument.ExplodedAssembly.CurrentTrajectory = -1
+
+
+class ShapeChangerViewProvider:
+    def __init__(self, obj):
+        obj.proxy = self
+
+    def getIcon(self):
+        __dir__ = os.path.dirname(__file__)
+        return __dir__ + '/icons/WireTrajectory.svg'
+
+
+
+def createShapeChanger():
+    sel_objects = FreeCAD.Gui.Selection.getSelectionEx()
+    try:
+        object_names = []
+        object_initial_visibilities = []
+        for obj in sel_objects:
+            object_names.append(obj.Object.Name)
+            object_initial_visibilities.append(obj.Object.ViewObject.Visibility)
+
+        SCObj = FreeCAD.ActiveDocument.addObject('App::DocumentObjectGroupPython', 'ShapeChanger')
+        ShapeChanger(SCObj)
+        #ShapeChangerViewProvider(SCObj.ViewObject)  # for some reason it complains about this
+        SCObj.names = object_names
+        SCObj.initialVisibility = object_initial_visibilities
+        EAFolder = FreeCAD.ActiveDocument.ExplodedAssembly
+        EAFolder.addObject(SCObj)
+        FreeCAD.ActiveDocument.recompute()
+
+    except IndexError:
+        FreeCAD.Console.PrintError( "ERROR: Select two different shapes" )
 
 
 def resetPlacement():
     # restore the placement of all objects
     EAFolder = FreeCAD.ActiveDocument.ExplodedAssembly
-    # set everything to its initial position
+    # set everything to its initial position and visualization
     for traj in EAFolder.Group:
-        for name in traj.names:
-            obj = FreeCAD.ActiveDocument.getObject(name)
-            # create placement from initial placement list
-            plm = EAFolder.InitialPlacements[name]
-            base = FreeCAD.Vector(plm[0][0], plm[0][1], plm[0][2])
-            rot = FreeCAD.Rotation(plm[1][0], plm[1][1], plm[1][2], plm[1][3])
-            obj.Placement = FreeCAD.Placement(base, rot)
+        for idx, name in enumerate(traj.names):
+            if traj.TrajType == 'SC':
+                obj = FreeCAD.ActiveDocument.getObject(name)
+                obj.ViewObject.Visibility = traj.initialVisibility[idx]
+
+            else:
+                obj = FreeCAD.ActiveDocument.getObject(name)
+                # create placement from initial placement list
+                plm = EAFolder.InitialPlacements[name]
+                base = FreeCAD.Vector(plm[0][0], plm[0][1], plm[0][2])
+                rot = FreeCAD.Rotation(plm[1][0], plm[1][1], plm[1][2], plm[1][3])
+                obj.Placement = FreeCAD.Placement(base, rot)
+
 
 
 
 def runAnimation(start=0, end=0, mode='complete', direction='forward'):
     # runs the animation from a start step number to the end step number
     # mode: 'complete', 'toPoint'
-    # 'complete' means forward from start to end and backwars if already in end
-    # 'forward' means disassemble from start to end
-    # 'backward' means assemble from start to end
+    # 'complete' means forward from start to finish and backwars if already ended
+    # 'forward' means disassemble from start to finish
+    # 'backward' means assemble from start to finish
     # 'toPoint' means go to an especific end point without animation
     # toggle 'InAnimation variable' to disable other icons temporally
     FreeCAD.ActiveDocument.ExplodedAssembly.InAnimation = True
@@ -359,7 +422,7 @@ def runAnimation(start=0, end=0, mode='complete', direction='forward'):
         # highligh current trajectory
         FreeCAD.Gui.Selection.addSelection(traj)
         # If trajectory is a bolt group or simple group:
-        if traj.Name[0:11] == 'SimpleGroup' or traj.Name[0:9] == 'BoltGroup':
+        if traj.TrajType == 'SG' or traj.TrajType == 'BG':
             # buffer objects
             objects = []
             for name in traj.names:
@@ -390,6 +453,15 @@ def runAnimation(start=0, end=0, mode='complete', direction='forward'):
                     obj.Placement = incremental_placement.multiply(obj.Placement)
 
                 FreeCAD.Gui.updateGui()
+                time.sleep(traj.AnimationStepTime)
+
+        elif traj.TrajType == 'SC':  # Shape Changing
+            for i in xrange( traj.WaitAnimationSteps ):
+                if i == traj.ChangeAtThisStep:
+                    for idx, name in enumerate(traj.names):
+                        FreeCAD.ActiveDocument.getObject(name).ViewObject.Visibility = not(traj.initialVisibility[idx])
+
+                FreeCAD.Gui.udpateGui()
                 time.sleep(traj.AnimationStepTime)
 
         else:
@@ -441,29 +513,35 @@ def goToEnd():
     # start animation
     EAFolder = FreeCAD.ActiveDocument.ExplodedAssembly.Group
     for traj in EAFolder:
-        objects = []
-        for name in traj.names:
-            objects.append(FreeCAD.ActiveDocument.getObject(name))
+        if traj.TrajType == 'SC':
+            for idx, name in enumerate(traj.names):
+                if traj.TrajType == 'SC':
+                    obj = FreeCAD.ActiveDocument.getObject(name)
+                    obj.ViewObject.Visibility = not(traj.initialVisibility[idx])
+        else:
+            objects = []
+            for name in traj.names:
+                objects.append(FreeCAD.ActiveDocument.getObject(name))
 
-        inc_D = traj.Distance / float(1)
-        inc_R = traj.Revolutions / float(1)
-        for i in xrange(1):
-            if i == 0:
-                dir_vectors = []
-                rot_vectors = []
-                rot_centers = []
-                for s in xrange(len(objects)):
-                    dir_vectors.append(FreeCAD.Vector(tuple(traj.dir_vectors[s])))
-                    rot_vectors.append(FreeCAD.Vector(tuple(traj.rot_vectors[s])))
-                    rot_centers.append(FreeCAD.Vector(tuple(traj.rot_centers[s])))
+            inc_D = traj.Distance / float(1)
+            inc_R = traj.Revolutions / float(1)
+            for i in xrange(1):
+                if i == 0:
+                    dir_vectors = []
+                    rot_vectors = []
+                    rot_centers = []
+                    for s in xrange(len(objects)):
+                        dir_vectors.append(FreeCAD.Vector(tuple(traj.dir_vectors[s])))
+                        rot_vectors.append(FreeCAD.Vector(tuple(traj.rot_vectors[s])))
+                        rot_centers.append(FreeCAD.Vector(tuple(traj.rot_centers[s])))
 
-            for n in xrange(len(objects)):
-                obj = objects[n]
-                obj_base = dir_vectors[n]*inc_D
-                obj_rot = FreeCAD.Rotation(rot_vectors[n], inc_R*360)
-                obj_rot_center = rot_centers[n]
-                incremental_placement = FreeCAD.Placement(obj_base, obj_rot, obj_rot_center)
-                obj.Placement = incremental_placement.multiply(obj.Placement)
+                for n in xrange(len(objects)):
+                    obj = objects[n]
+                    obj_base = dir_vectors[n]*inc_D
+                    obj_rot = FreeCAD.Rotation(rot_vectors[n], inc_R*360)
+                    obj_rot_center = rot_centers[n]
+                    incremental_placement = FreeCAD.Placement(obj_base, obj_rot, obj_rot_center)
+                    obj.Placement = incremental_placement.multiply(obj.Placement)
 
 
     FreeCAD.Gui.updateGui()

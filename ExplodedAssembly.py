@@ -37,6 +37,7 @@ class ExplodedAssemblyFolder:
         obj.addProperty('App::PropertyInteger', 'CurrentTrajectory').CurrentTrajectory = 0
         obj.addProperty('App::PropertyBool', 'ResetAnimation').ResetAnimation = False
         obj.addProperty('App::PropertyBool', 'InAnimation').InAnimation = False
+        obj.addProperty('App::PropertyBool', 'InCycleAnimation').InCycleAnimation = False
         obj.addProperty('App::PropertyBool', 'RemoveAllTrajectories').RemoveAllTrajectories = False
         obj.addProperty('App::PropertyString', 'TrajType' ).TrajType = 'EAF'
         obj.setEditorMode('TrajType', 1 )
@@ -455,17 +456,23 @@ def runAnimation(start=0, end=0, mode='complete', direction='forward'):
                 FreeCAD.Gui.updateGui()
                 time.sleep(traj.AnimationStepTime)
 
-        elif traj.TrajType == 'SC':  # Shape Changing
+        if traj.TrajType == 'SC':  # Shape Changing
+            FreeCAD.Console.PrintError("0")
             for i in xrange( traj.WaitAnimationSteps ):
+                FreeCAD.Console.PrintError("1")
                 if i == traj.ChangeAtThisStep:
+                    FreeCAD.Console.PrintError("2")
                     for idx, name in enumerate(traj.names):
+                        FreeCAD.Console.PrintError("3")
                         FreeCAD.ActiveDocument.getObject(name).ViewObject.Visibility = not(traj.initialVisibility[idx])
+                        FreeCAD.Console.PrintError("4")
 
-                FreeCAD.Gui.udpateGui()
+                FreeCAD.Gui.updateGui()
                 time.sleep(traj.AnimationStepTime)
 
         else:
             # if traj is a WireGroup object
+            FreeCAD.Console.PrintError(traj.TrajType)
             steps = traj.AnimationStepsEdge
             edges = traj.Shape.Edges
             for edge in edges:

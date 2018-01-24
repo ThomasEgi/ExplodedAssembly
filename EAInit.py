@@ -281,7 +281,8 @@ class StopAnimation:
 
     def IsActive(self):
         if FreeCADGui.ActiveDocument:
-            if not(FreeCAD.ActiveDocument.ExplodedAssembly.InAnimation):
+            EA = FreeCAD.ActiveDocument.ExplodedAssembly
+            if not(EA.InAnimation) or EA.InCycleAnimation:
                 return False
 
             else:
@@ -376,6 +377,7 @@ class CycleAnimation:
     def Activated(self):
         try:
             self.running = not( self.running )
+            FreeCAD.ActiveDocument.ExplodedAssembly.InCycleAnimation = self.running
             while self.running:
                 ea.resetPlacement()
                 ea.runAnimation()

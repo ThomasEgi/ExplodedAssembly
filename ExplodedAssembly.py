@@ -634,8 +634,26 @@ def updateTrajectoryLines():
             rot_centers.append(FreeCAD.Vector(tuple(traj.rot_centers[s])))
 
         for n in range(len(objects)):
-            pa = rot_centers[n]# objects[n].Placement.Base
-            pb = rot_centers[n] + dir_vectors[n]*inc_D
+            #the following code only works properly if objects are in their base position (EA set to the beginning)
+            #the current animation and trajectory system is not exactly flexible when it comes to coordinate spaces.
+            #guess this needs a bit of refactoring in future to properly handle local transforms initial or sequence dependent.
+            #using panda3d's scene graph and lerp/sequencer system as reference would be useful
+            
+            #pa is the starting point of the trajectory line.
+            #since objects can have local transforms we need to get the global transform of that point.
+            pa =  objects[n].getGlobalPlacement().Base
+            #we mirror the animation code to move the object into it's target position 
+            #once in place take the global coordinate of the endpoint again
+            #finally revert the object back to its starting position
+            obj = objects[n]
+            obj_placement_initial = obj.Placement.multiply(FreeCAD.Placement()) #backup inital placement
+            obj_base = dir_vectors[n]*inc_D
+            obj_rot = FreeCAD.Rotation()
+            obj_rot_center = rot_centers[n]
+            incremental_placement = FreeCAD.Placement(obj_base, obj_rot, obj_rot_center)
+            obj.Placement = incremental_placement.multiply(obj.Placement) #apply update to object
+            pb =  objects[n].getGlobalPlacement().Base #save the target location
+            obj.Placement= obj_placement_initial #roll out backup.
             lines_compound.append(Part.makeLine(pa, pb))
 
         l_obj = FreeCAD.ActiveDocument.addObject('Part::Feature','trajectory_line')
